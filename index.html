@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cheer-Up Studio" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='26' fill='%231e1035'/%3E%3Ccircle cx='60' cy='60' r='42' fill='%237c3aed'/%3E%3Ctext x='60' y='76' font-size='48' text-anchor='middle'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='26' fill='%231e1035'/%3E%3Ccircle cx='60' cy='60' r='42' fill='%237c3aed'/%3E%3Ctext x='60' y='76' font-size='48' text-anchor='middle'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>Boston ↔ Bay Area Creative Cheer-Up Studio</title>
+  <link rel="stylesheet" href="src/styles/main.css" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</head>
+<body>
+  <div id="app" data-testid="app-shell" class="app-shell">
+    <!-- Top Studio Header & Coast-to-Coast Navigation Bar -->
+    <header class="studio-header" role="banner">
+      <div class="header-brand">
+        <div class="brand-emblem" aria-hidden="true">🌙✨🌉</div>
+        <div class="brand-titles">
+          <h1 class="studio-title">Boston ↔ Bay Area Creative Cheer-Up Studio</h1>
+          <p class="studio-subtitle">
+            Made with ❤️ from Mom in San Francisco to Daughter in Boston
+          </p>
+        </div>
+      </div>
+
+      <div class="header-meta-bar">
+        <div class="header-profile-pill" title="Active Creative Artist Profile">
+          <span class="profile-avatar-icon" id="header-avatar-icon">🐱🌙</span>
+          <span class="profile-label">Artist:</span>
+          <strong
+            id="header-nickname-display"
+            data-testid="header-nickname-display"
+            class="profile-nickname"
+          >Boston Starlight Artist</strong>
+        </div>
+
+        <div class="header-dual-clock-pill" aria-label="San Francisco and Boston Live Time">
+          <span class="city-chip sf-chip">
+            🌉 SF: <strong id="header-clock-sf">--:--</strong>
+          </span>
+          <span class="city-divider">↔</span>
+          <span class="city-chip boston-chip">
+            🦆 Boston: <strong id="header-clock-boston">--:--</strong>
+          </span>
+        </div>
+      </div>
+
+      <nav class="studio-nav" role="navigation" aria-label="Studio Workspaces">
+        <button
+          type="button"
+          class="nav-tab active"
+          data-tab="tattoo"
+          data-target="view-tattoo-studio"
+          data-testid="nav-tab-tattoo"
+          aria-selected="true"
+          aria-controls="view-tattoo-studio"
+        >
+          <span class="tab-icon" aria-hidden="true">🎨</span>
+          <span class="tab-label">Tattoo Studio</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          data-tab="catnap"
+          data-target="view-catnap-playground"
+          data-testid="nav-tab-catnap"
+          aria-selected="false"
+          aria-controls="view-catnap-playground"
+        >
+          <span class="tab-icon" aria-hidden="true">🐱🌙</span>
+          <span class="tab-label">CatNap Playground</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          data-tab="kpop"
+          data-target="view-kpop-stage"
+          data-testid="nav-tab-kpop"
+          aria-selected="false"
+          aria-controls="view-kpop-stage"
+        >
+          <span class="tab-icon" aria-hidden="true">🎤⚡</span>
+          <span class="tab-label">K-Pop Stage</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          data-tab="hub"
+          data-target="view-connection-hub"
+          data-testid="nav-tab-hub"
+          aria-selected="false"
+          aria-controls="view-connection-hub"
+        >
+          <span class="tab-icon" aria-hidden="true">💌🌉</span>
+          <span class="tab-label">Bay ↔ Boston Hub</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Workspace Containers for R1..R4 -->
+    <main class="studio-main" role="main">
+      <section
+        id="view-tattoo-studio"
+        class="studio-view active"
+        data-view="tattoo"
+        role="tabpanel"
+        aria-label="Temporary Tattoo Designer & Printable Sheet Studio"
+      ></section>
+
+      <section
+        id="view-catnap-playground"
+        class="studio-view"
+        data-view="catnap"
+        role="tabpanel"
+        aria-label="CatNap Cozy Playground & Starlight Rooftop Dash"
+      ></section>
+
+      <section
+        id="view-kpop-stage"
+        class="studio-view"
+        data-view="kpop"
+        role="tabpanel"
+        aria-label="K-Pop Demon Hunters Rhythm & Remix Stage"
+      ></section>
+
+      <section
+        id="view-connection-hub"
+        class="studio-view"
+        data-view="hub"
+        role="tabpanel"
+        aria-label="Bay Area to Boston Connection Hub & Creations Gallery"
+      ></section>
+    </main>
+  </div>
+
+  <script type="module" src="src/core/app-shell.js"></script>
+</body>
+</html>

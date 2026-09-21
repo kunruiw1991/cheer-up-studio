@@ -1,0 +1,370 @@
+/**
+ * Boston ↔ Bay Area Creative Cheer-Up Studio
+ * Global Design System, Theme Variables & Responsive Layout Styles
+ */
+
+:root {
+  /* Core Starlight Twilight & Lavender Dream-Mist Palette */
+  --bg-deep: #0d0a1a;
+  --bg-mid: #171230;
+  --bg-elevated: rgba(31, 24, 62, 0.86);
+  --bg-card: rgba(38, 29, 74, 0.82);
+  --bg-card-hover: rgba(52, 40, 96, 0.92);
+  --bg-glass: rgba(255, 255, 255, 0.07);
+
+  /* Accent Signatures */
+  --catnap-lavender: #b983ff;
+  --catnap-soft: #e0c3fc;
+  --kpop-magenta: #ff2e93;
+  --kpop-cyan: #00f5d4;
+  --golden-gate-coral: #ff7b54;
+  --golden-star: #ffd166;
+  --boston-emerald: #06d6a0;
+
+  /* Text & Borders */
+  --text-primary: #fdfbff;
+  --text-secondary: #d7cde9;
+  --text-muted: #9f92b8;
+  --border-subtle: rgba(185, 131, 255, 0.28);
+  --border-glow: rgba(0, 245, 212, 0.55);
+
+  /* Radii & Shadows */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --shadow-card: 0 12px 32px rgba(5, 3, 15, 0.55);
+  --shadow-neon: 0 0 18px rgba(185, 131, 255, 0.42);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: radial-gradient(circle at 15% 15%, #2a1954 0%, transparent 45%),
+    radial-gradient(circle at 85% 18%, #3b1347 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, #162b4c 0%, transparent 50%),
+    linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 12px 16px 28px;
+}
+
+/* --------------------------------------------------------------------------
+ * Studio Top Header & Navigation Bar
+ * -------------------------------------------------------------------------- */
+.studio-header {
+  background: linear-gradient(
+    135deg,
+    rgba(42, 29, 82, 0.92) 0%,
+    rgba(28, 20, 58, 0.92) 60%,
+    rgba(48, 22, 68, 0.9) 100%
+  );
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.brand-emblem {
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--catnap-lavender), var(--kpop-magenta));
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(255, 46, 147, 0.35);
+}
+
+.brand-titles {
+  flex: 1;
+  min-width: 240px;
+}
+
+.studio-title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    var(--catnap-soft) 38%,
+    var(--golden-star) 72%,
+    var(--kpop-cyan) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.studio-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.header-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.header-profile-pill,
+.header-dual-clock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.88rem;
+}
+
+.profile-nickname {
+  color: var(--golden-star);
+  font-weight: 700;
+}
+
+.city-chip {
+  color: var(--text-secondary);
+}
+
+.city-chip strong {
+  color: var(--kpop-cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.city-divider {
+  color: var(--catnap-lavender);
+  font-weight: 700;
+}
+
+/* Navigation Tabs */
+.studio-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.nav-tab {
+  min-height: 48px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  transition: transform 0.16s ease, background 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.nav-tab:hover {
+  background: rgba(185, 131, 255, 0.18);
+  border-color: var(--catnap-lavender);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.nav-tab.active {
+  background: linear-gradient(
+    135deg,
+    rgba(185, 131, 255, 0.42) 0%,
+    rgba(255, 46, 147, 0.36) 55%,
+    rgba(0, 245, 212, 0.28) 100%
+  );
+  border-color: var(--kpop-cyan);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.3);
+}
+
+.tab-icon {
+  font-size: 1.15rem;
+}
+
+/* --------------------------------------------------------------------------
+ * Workspace Views
+ * -------------------------------------------------------------------------- */
+.studio-main {
+  flex: 1;
+  width: 100%;
+}
+
+.studio-view {
+  display: none;
+  width: 100%;
+}
+
+.studio-view.active {
+  display: block;
+  animation: studioFadeIn 0.2s ease-out;
+}
+
+@keyframes studioFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Shared UI Controls, Cards & Canvas Containers (Available to M2..M5)
+ * -------------------------------------------------------------------------- */
+.panel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--catnap-soft);
+}
+
+button,
+select,
+input[type='text'],
+input[type='number'],
+input[type='color'],
+input[type='range'],
+textarea {
+  font-family: inherit;
+}
+
+button {
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--catnap-lavender), var(--kpop-magenta));
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 46, 147, 0.3);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background: rgba(185, 131, 255, 0.22);
+  border-color: var(--catnap-lavender);
+}
+
+canvas {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  touch-action: none;
+}
+
+/* Loading & Fallback Card */
+.module-placeholder-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--catnap-lavender);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 680px;
+  margin: 28px auto;
+}
+
+.module-placeholder-card h2 {
+  margin: 0 0 8px;
+  color: var(--golden-star);
+}
+
+.module-placeholder-card p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+ * Responsive Breakpoints (iPad & Mobile)
+ * -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .studio-nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 8px 10px 20px;
+  }
+
+  .studio-header {
+    padding: 12px;
+  }
+
+  .header-meta-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
