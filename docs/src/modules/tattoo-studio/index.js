@@ -13,7 +13,7 @@
 import { STAMP_CATEGORIES, TATTOO_STAMPS, getStampById } from './stamps.js';
 import { BRUSH_MODES, COLOR_SWATCHES, renderTattooLayer } from './brushes.js';
 import { BODY_PARTS, SKIN_TONES, LIGHTING_PRESETS, renderVirtualTryOnCanvas } from './tryon-preview.js';
-import { exportTattooSheetBundle } from './sheet-exporter.js';
+import { exportTattooSheetBundle, syncMirroredSheetCanvases, makeThumbnailDataUrl } from './sheet-exporter.js';
 
 function cloneLayers(layers) {
   return JSON.parse(JSON.stringify(layers));
@@ -390,7 +390,37 @@ export function initTattooStudio(container, store, _options = {}) {
       });
     }
 
-    // Keep pixel-exact mirrored canvas & printable transfer sheet continuously synchronized
+    // Keep the mirrored canvas & printable transfer sheet in sync on a short
+    // debounce. PNG encoding (`toDataURL`) is deliberately NOT done here: doing
+    // 3 full PNG encodes (incl. the 1275x1650 sheet) on every pointermove froze
+    // iPad Safari until the page was killed and reopened blank.
+    scheduleSheetSync();
+    return state.lastExportResult;
+  }
+
+  let sheetSyncTimer = null;
+  function scheduleSheetSync() {
+    if (sheetSyncTimer) clearTimeout(sheetSyncTimer);
+    sheetSyncTimer = setTimeout(() => {
+      sheetSyncTimer = null;
+      try {
+        syncMirroredSheetCanvases(sourceCanvas, mirroredCanvas, sheetCanvas, state.title);
+      } catch (err) {
+        console.warn('[TattooStudio] sheet sync skipped:', err);
+      }
+    }, 180);
+  }
+
+  /**
+   * Full export pass: re-renders the design and encodes the normal, mirrored and
+   * printable-sheet PNG data URLs. Only used by explicit export / save actions.
+   */
+  function renderExportBundle() {
+    renderAll();
+    if (sheetSyncTimer) {
+      clearTimeout(sheetSyncTimer);
+      sheetSyncTimer = null;
+    }
     state.lastExportResult = exportTattooSheetBundle(sourceCanvas, mirroredCanvas, sheetCanvas, state.title);
     return state.lastExportResult;
   }
@@ -590,7 +620,7 @@ export function initTattooStudio(container, store, _options = {}) {
   }
 
   function exportTransferSheet() {
-    const bundle = renderAll();
+    const bundle = renderExportBundle();
     if (downloadAnchor && bundle?.sheetDataUrl) {
       downloadAnchor.href = bundle.sheetDataUrl;
       downloadAnchor.download = 'cheer-up-mirrored-tattoo-sheet.png';
@@ -600,7 +630,7 @@ export function initTattooStudio(container, store, _options = {}) {
   }
 
   function exportNormalPng() {
-    const bundle = renderAll();
+    const bundle = renderExportBundle();
     if (downloadAnchor && bundle?.normalDataUrl) {
       downloadAnchor.href = bundle.normalDataUrl;
       downloadAnchor.download = 'cheer-up-tattoo-design.png';
@@ -610,14 +640,22 @@ export function initTattooStudio(container, store, _options = {}) {
   }
 
   function saveToGallery(customTitle) {
-    const bundle = renderAll();
+    renderAll();
     const titleToSave = customTitle || state.title || `Custom Tattoo #${Date.now()}`;
+    // Persist a small thumbnail only. `layers` are stored too, so the full-res
+    // design can always be regenerated via `loadTattoo` + export.
+    let thumbnailDataUrl = '';
+    try {
+      thumbnailDataUrl = makeThumbnailDataUrl(sourceCanvas, 240);
+    } catch (err) {
+      console.warn('[TattooStudio] thumbnail generation failed:', err);
+    }
     const saved = activeStore
       ? activeStore.saveTattoo({
           title: titleToSave,
           name: titleToSave,
-          previewDataUrl: bundle.normalDataUrl,
-          thumbnailDataUrl: bundle.normalDataUrl,
+          previewDataUrl: thumbnailDataUrl,
+          thumbnailDataUrl,
           layers: cloneLayers(state.layers),
           skinTone: state.skinTone,
           lighting: state.lighting,
@@ -773,11 +811,18 @@ export function initTattooStudio(container, store, _options = {}) {
     renderAll();
   });
 
+  let strokeFrameQueued = false;
   sourceCanvas.addEventListener('pointermove', (evt) => {
     if (!state.isDrawing) return;
     const pt = getCanvasCoords(evt);
     state.currentStrokePoints.push(pt);
-    renderAll();
+    // Coalesce high-frequency pointer events (Apple Pencil / 120 Hz) into one render per frame
+    if (strokeFrameQueued) return;
+    strokeFrameQueued = true;
+    requestAnimationFrame(() => {
+      strokeFrameQueued = false;
+      if (state.isDrawing) renderAll();
+    });
   });
 
   function finishPointerStroke() {
