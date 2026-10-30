@@ -202,7 +202,14 @@ export function renderPrintableTransferSheet(sheetCanvas, mirroredCanvas, title 
  * Generates both the normal PNG, the pixel-exact horizontally mirrored canvas & PNG,
  * and the 8.5"×11" printable transfer sheet PNG.
  */
-export function exportTattooSheetBundle(sourceCanvas, mirroredCanvas, sheetCanvas, title = 'Custom Cheer-Up Tattoo') {
+/**
+ * Synchronizes the mirrored canvas and the printable transfer sheet canvas with
+ * `sourceCanvas` WITHOUT any PNG encoding (`toDataURL`). This is the cheap path
+ * that is safe to run on a debounce while the artist is drawing; PNG encoding is
+ * deferred to `exportTattooSheetBundle` which is only called on explicit
+ * export/save actions.
+ */
+export function syncMirroredSheetCanvases(sourceCanvas, mirroredCanvas, sheetCanvas, title = 'Custom Cheer-Up Tattoo') {
   const W = sourceCanvas.width;
   const H = sourceCanvas.height;
   const sourceCtx = sourceCanvas.getContext('2d');
@@ -220,6 +227,39 @@ export function exportTattooSheetBundle(sourceCanvas, mirroredCanvas, sheetCanva
 
   // Render full 8.5"x11" printable transfer sheet
   renderPrintableTransferSheet(sheetCanvas, mirroredCanvas, title);
+
+  return { width: W, height: H, sourceImageData, mirroredImageData, verification };
+}
+
+/**
+ * Produces a small, storage-friendly JPEG thumbnail of `sourceCanvas`.
+ * Saved gallery entries persist this (~10-40 KB) instead of the full-resolution
+ * design PNG (~1 MB), which previously exhausted the ~5 MB `localStorage` quota
+ * on iPad Safari after a handful of saves and made the studio fail to load.
+ */
+export function makeThumbnailDataUrl(sourceCanvas, maxSize = 240, quality = 0.82) {
+  const W = sourceCanvas.width || 1;
+  const H = sourceCanvas.height || 1;
+  const scale = Math.min(1, maxSize / Math.max(W, H));
+  const tw = Math.max(1, Math.round(W * scale));
+  const th = Math.max(1, Math.round(H * scale));
+  const thumb = document.createElement('canvas');
+  thumb.width = tw;
+  thumb.height = th;
+  const tctx = thumb.getContext('2d');
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  // The design canvas is fully opaque (gradient studio backdrop), so JPEG loses
+  // nothing visible and is ~10x smaller than PNG for gradient-heavy pixels.
+  tctx.fillStyle = '#0f172a';
+  tctx.fillRect(0, 0, tw, th);
+  tctx.drawImage(sourceCanvas, 0, 0, tw, th);
+  return thumb.toDataURL('image/jpeg', quality);
+}
+
+export function exportTattooSheetBundle(sourceCanvas, mirroredCanvas, sheetCanvas, title = 'Custom Cheer-Up Tattoo') {
+  const { width: W, height: H, sourceImageData, mirroredImageData, verification } =
+    syncMirroredSheetCanvases(sourceCanvas, mirroredCanvas, sheetCanvas, title);
 
   const normalDataUrl = sourceCanvas.toDataURL('image/png');
   const mirroredDataUrl = mirroredCanvas.toDataURL('image/png');

@@ -9,10 +9,59 @@
   <meta name="apple-mobile-web-app-title" content="Cheer-Up Studio" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='26' fill='%231e1035'/%3E%3Ccircle cx='60' cy='60' r='42' fill='%237c3aed'/%3E%3Ctext x='60' y='76' font-size='48' text-anchor='middle'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='26' fill='%231e1035'/%3E%3Ccircle cx='60' cy='60' r='42' fill='%237c3aed'/%3E%3Ctext x='60' y='76' font-size='48' text-anchor='middle'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E" />
-  <link rel="manifest" href="./manifest.json" />
+  <!-- Manifest is attached at runtime only over http(s); under file:// (AirDrop / email
+       standalone bundle) the fetch is blocked by CORS and only produces console noise. -->
+  <script>
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      var __m = document.createElement('link');
+      __m.rel = 'manifest';
+      __m.href = './manifest.json';
+      document.head.appendChild(__m);
+    }
+  </script>
   <title>Boston ↔ Bay Area Creative Cheer-Up Studio</title>
   <link rel="stylesheet" href="src/styles/main.css" />
   <script>
+    // Recovery escape hatch: open .../?reset=1 to wipe saved studio data, caches and
+    // the service worker, then reload clean. Useful if the iPad ever shows a blank page.
+    (function () {
+      try {
+        var params = new URLSearchParams(location.search);
+        if (params.get('reset') === '1') {
+          try { localStorage.clear(); } catch (e) {}
+          var tasks = [];
+          if (window.caches && caches.keys) {
+            tasks.push(caches.keys().then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); }));
+          }
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            tasks.push(navigator.serviceWorker.getRegistrations().then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); }));
+          }
+          Promise.all(tasks).catch(function () {}).then(function () {
+            location.replace(location.pathname);
+          });
+        }
+      } catch (e) {}
+    })();
+
+    // Boot watchdog: if the studio modules have not mounted within 8 s (JS crash,
+    // corrupted saved data, ...), show a visible recovery banner instead of a blank page.
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var mounted = document.querySelector('[data-testid="tattoo-canvas"]');
+        if (mounted) return;
+        var bar = document.createElement('div');
+        bar.setAttribute('data-testid', 'boot-recovery-banner');
+        bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;padding:14px 16px;border-radius:14px;background:#fff7ed;color:#7c2d12;font:600 15px/1.4 -apple-system,system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
+        bar.innerHTML = '<span>😿 The studio did not finish loading.</span>' +
+          '<button type="button" style="padding:10px 16px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font:inherit;font-weight:700;">🔄 Reload</button>' +
+          '<button type="button" style="padding:10px 16px;border:0;border-radius:10px;background:#dc2626;color:#fff;font:inherit;font-weight:700;">🧹 Reset studio data</button>';
+        var btns = bar.querySelectorAll('button');
+        btns[0].onclick = function () { location.reload(); };
+        btns[1].onclick = function () { location.href = location.pathname + '?reset=1'; };
+        document.body.appendChild(bar);
+      }, 8000);
+    });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});

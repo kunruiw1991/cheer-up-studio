@@ -230,6 +230,18 @@ export async function bootstrapAppShell() {
   await Promise.all(MODULE_DESCRIPTORS.map((desc) => mountModuleDescriptor(desc)));
 
   CheerUpStore.emit('app:ready', { activeTab: _activeTab });
+
+  // Repair galleries saved by earlier builds (full-res PNG previews that blew the
+  // storage quota). Runs after first paint so it never delays the studio showing up.
+  setTimeout(() => {
+    try {
+      const p = CheerUpStore.migrateOversizedPreviews?.();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    } catch {
+      /* best effort */
+    }
+  }, 1500);
+
   return window.__CHEER_UP_STUDIO__;
 }
 

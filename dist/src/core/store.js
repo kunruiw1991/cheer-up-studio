@@ -114,6 +114,10 @@ function cloneDeep(value) {
   }
 }
 
+// Gallery sizing guards (iPad Safari localStorage quota is ~5 MB total).
+export const MAX_SAVED_TATTOOS = 40;
+export const MAX_PREVIEW_DATA_URL_CHARS = 160 * 1024;
+
 export class CheerUpStoreEngine {
   constructor() {
     this.STORAGE_KEYS = STORAGE_KEYS;
@@ -170,10 +174,68 @@ export class CheerUpStoreEngine {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(key, serialized);
       }
-    } catch {
-      // Keep in-memory state if quota or security error occurs
+    } catch (err) {
+      // Quota / security error. For list-valued keys (newest first), evict the
+      // oldest entries until the write fits so the studio keeps working instead
+      // of silently dropping every save once iPad Safari's ~5 MB quota is full.
+      if (Array.isArray(value) && value.length > 1) {
+        const trimmed = value.slice(0, Math.max(1, Math.floor(value.length * 0.75)));
+        console.warn(`[CheerUpStore] storage full for ${key}; evicting ${value.length - trimmed.length} oldest item(s)`);
+        return this._writeRaw(key, trimmed);
+      }
+      console.warn('[CheerUpStore] storage write failed for', key, err);
     }
     return value;
+  }
+
+  /**
+   * One-time repair for gallery entries saved by earlier builds that persisted a
+   * full 600x600 PNG (~1 MB each) as `previewDataUrl`. Re-encodes them as small
+   * thumbnails so the whole gallery fits comfortably inside the storage quota.
+   */
+  migrateOversizedPreviews({ maxChars = MAX_PREVIEW_DATA_URL_CHARS, thumbSize = 240 } = {}) {
+    if (typeof document === 'undefined' || typeof Image === 'undefined') return Promise.resolve(0);
+    const list = this.getTattoos();
+    const oversized = list.filter(
+      (t) => typeof t.previewDataUrl === 'string' && t.previewDataUrl.length > maxChars
+    );
+    if (oversized.length === 0) return Promise.resolve(0);
+
+    const shrink = (dataUrl) =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const scale = Math.min(1, thumbSize / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+            const c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+            c.height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+            const cctx = c.getContext('2d');
+            cctx.fillStyle = '#0f172a';
+            cctx.fillRect(0, 0, c.width, c.height);
+            cctx.drawImage(img, 0, 0, c.width, c.height);
+            resolve(c.toDataURL('image/jpeg', 0.82));
+          } catch {
+            resolve('');
+          }
+        };
+        img.onerror = () => resolve('');
+        img.src = dataUrl;
+      });
+
+    return Promise.all(
+      oversized.map(async (t) => {
+        const small = await shrink(t.previewDataUrl);
+        t.previewDataUrl = small;
+        t.thumbnailDataUrl = small;
+      })
+    ).then(() => {
+      this._writeRaw(STORAGE_KEYS.TATTOOS, list);
+      this.emit('tattoos:updated', list);
+      this.emit('state:changed', { key: STORAGE_KEYS.TATTOOS, value: list });
+      console.info(`[CheerUpStore] shrank ${oversized.length} oversized gallery preview(s)`);
+      return oversized.length;
+    });
   }
 
   /**
@@ -314,6 +376,9 @@ export class CheerUpStoreEngine {
       list[idx] = entry;
     } else {
       list.unshift(entry);
+    }
+    if (list.length > MAX_SAVED_TATTOOS) {
+      list.length = MAX_SAVED_TATTOOS;
     }
     this._writeRaw(STORAGE_KEYS.TATTOOS, list);
     this.emit('tattoos:updated', list);
